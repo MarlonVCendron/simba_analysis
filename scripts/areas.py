@@ -61,3 +61,43 @@ def direction_by_group(df, session_type):
     df = df.copy()
     area_columns, direction_columns = get_area_and_direction_columns(df, session_type)
     _plot_group_comparison(df, direction_columns, session_type, 'direction', 'Direções', 'Rearing por direção e grupo', 'direction_by_group')
+
+def mean_rears_per_area(df, session_type):
+    df = df.copy()
+    area_columns, _ = get_area_and_direction_columns(df, session_type)
+    
+    mean_rears = []
+    areas = []
+    p_values = []
+    
+    for area in area_columns:
+        area_data = df[df[area] == 1]
+        if len(area_data) > 0:
+            mean_rear = area_data.groupby('group')['rearing'].mean()
+            mean_rears.append(mean_rear)
+            areas.append(area)
+            
+            ct = pd.crosstab(area_data['group'], area_data['rearing'])
+            chi2, p, dof, expected = chi2_contingency(ct)
+            
+            p_values.append(p)
+    
+    if mean_rears:
+        mean_df = pd.concat(mean_rears, axis=1, keys=areas)
+        
+        plt.figure(figsize=(12, 6))
+        ax = mean_df.T.plot(kind='bar', color=['red', 'blue'])
+        plt.xlabel('Áreas')
+        plt.ylabel('Média de Rearing')
+        plt.title(f'Média de Rearing por Área - {session_type}')
+        plt.legend(['muscimol', 'salina'])
+        plt.xticks(rotation=45, ha='right')
+        
+        for i, p_val in enumerate(p_values):
+            if p_val < 0.05:
+                max_height = max(mean_df.iloc[0, i], mean_df.iloc[1, i])
+                plt.text(i, max_height + max_height*0.1, f'* p={p_val:.3f}', ha='center', va='bottom', fontweight='bold')
+        
+        plt.tight_layout()
+        os.makedirs(os.path.join(fig_path, 'areas'), exist_ok=True)
+        plt.savefig(os.path.join(fig_path, f'areas/mean_rears_per_area_{session_type}.png'))
