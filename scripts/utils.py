@@ -37,7 +37,7 @@ def get_area_and_direction_columns(df, session_type):
     elif session_type == 's2':
         area_columns = ['NOVEL_1', 'NOVEL_2', 'FORMER_1', 'FORMER_2', 'SAME_1', 'SAME_2', 'NEVER_1', 'NEVER_2']
     
-    direction_columns = [col for col in direction_columns if col.replace('dir_', '') in area_columns]
+    direction_columns = ['dir_' + col for col in area_columns]
     
     return area_columns, direction_columns
 

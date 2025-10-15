@@ -101,3 +101,30 @@ def mean_rears_per_area(df, session_type):
         plt.tight_layout()
         os.makedirs(os.path.join(fig_path, 'areas'), exist_ok=True)
         plt.savefig(os.path.join(fig_path, f'areas/mean_rears_per_area_{session_type}.png'))
+
+def rearing_direction_relationship(df, session_type):
+    df = df.copy()
+    area_columns, direction_columns = get_area_and_direction_columns(df, session_type)
+    
+    correlation_matrix = np.zeros((len(area_columns), len(direction_columns)))
+    
+    
+    rearing_df = get_rearing(df)
+    for i, rearing_area in enumerate(area_columns):
+        for j, direction_area in enumerate(direction_columns):
+            corr = rearing_df[rearing_area].corr(rearing_df[direction_area])
+            correlation_matrix[i, j] = corr if not np.isnan(corr) else 0
+
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(correlation_matrix, annot=True, fmt='.3f', cmap='RdBu_r', center=0,
+                xticklabels=direction_columns, yticklabels=area_columns,
+                cbar_kws={'label': 'Correlation'})
+    plt.title(f'Correlação área-direção - {session_type}')
+    plt.xlabel('Direcionamento')
+    plt.ylabel('Áreas')
+    
+    plt.tight_layout()
+    os.makedirs(os.path.join(fig_path, 'areas'), exist_ok=True)
+    plt.savefig(os.path.join(fig_path, f'areas/rearing_direction_relationship_{session_type}.png'))
+    plt.close()
+
