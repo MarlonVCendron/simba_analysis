@@ -9,10 +9,10 @@ from scipy.stats import mannwhitneyu, ttest_ind, shapiro
 from itertools import combinations
 
 
-base_path = '/home/marlon/edu/mestrado/simba_analysis/simba'
-fig_path = os.path.join(base_path, 'src/figures')
+base_path = '/home/marlon/edu/mestrado/simba_analysis'
+fig_path = os.path.join(base_path, 'figures')
 
-summary_data_path = os.path.join(base_path, 'src/data/summary_data.csv')
+summary_data_path = os.path.join(base_path, 'data/summary_data.csv')
 
 session_types = ['t', 's1', 's2']
 groups = ['muscimol', 'salina']

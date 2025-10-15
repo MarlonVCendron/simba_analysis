@@ -3,27 +3,27 @@ import pandas as pd
 import numpy as np
 import re
 
-base_path = '/home/marlon/edu/mestrado/simba_analysis/simba'
+from utils import base_path
 
 direction_paths = {
-  't': 'TEST_zones/project_folder/logs/ROI_directionality_summary_20251013234406.csv',
-  's1': 's1_zones/project_folder/logs/ROI_directionality_summary_20251013235719.csv',
-  's2': 's2_zones/project_folder/logs/ROI_directionality_summary_20251013235740.csv',
+  't':  'simba/TEST_zones/project_folder/logs/ROI_directionality_summary_20251013234406.csv',
+  's1': 'simba/s1_zones/project_folder/logs/ROI_directionality_summary_20251013235719.csv',
+  's2': 'simba/s2_zones/project_folder/logs/ROI_directionality_summary_20251013235740.csv',
 }
 
 rearing_paths = {
-  't': 'TEST_zones/project_folder/csv/machine_results',
-  's1': 's1_zones/project_folder/csv/machine_results',
-  's2': 's2_zones/project_folder/csv/machine_results',
+  't': 'simba/TEST_zones/project_folder/csv/machine_results',
+  's1': 'simba/s1_zones/project_folder/csv/machine_results',
+  's2': 'simba/s2_zones/project_folder/csv/machine_results',
 }
 
 roi_paths = {
-  't': 'TEST_zones/project_folder/csv/features_extracted',
-  's1': 's1_zones/project_folder/csv/features_extracted',
-  's2': 's2_zones/project_folder/csv/features_extracted',
+  't': 'simba/TEST_zones/project_folder/csv/features_extracted',
+  's1': 'simba/s1_zones/project_folder/csv/features_extracted',
+  's2': 'simba/s2_zones/project_folder/csv/features_extracted',
 }
 
-group_index_path = os.path.join(base_path, 'src/data/group_index.csv')
+group_index_path = os.path.join(base_path, 'data/group_index.csv')
 
 def main():
   group_index = pd.read_csv(group_index_path)
@@ -144,7 +144,7 @@ def main():
     unique_vals = summary_data[col].unique()
     assert set(unique_vals).issubset({0, 1}), f"Column {col} is not binary: {unique_vals}"
   
-  csv_output_path = os.path.join(base_path, 'src/data/summary_data.csv')
+  csv_output_path = os.path.join(base_path, 'data/summary_data.csv')
   summary_data.to_csv(csv_output_path, index=False)
   print(f'Summary data exported to CSV: {csv_output_path}')
 
