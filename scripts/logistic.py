@@ -1,5 +1,5 @@
 import pandas as pd
-import numpy as np
+import os
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.linear_model import LogisticRegression
@@ -68,5 +68,6 @@ def logistic(_df, session_type):
     plt.xticks(rotation=45)
     
     plt.tight_layout()
-    plt.savefig(f'{fig_path}/logistic_{session_type}.png', dpi=300, bbox_inches='tight')
+    os.makedirs(os.path.join(fig_path, 'logistic'), exist_ok=True)
+    plt.savefig(os.path.join(fig_path, 'logistic', f'logistic_{session_type}.png'), dpi=300, bbox_inches='tight')
     

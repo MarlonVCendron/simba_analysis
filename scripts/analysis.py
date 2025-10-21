@@ -13,6 +13,7 @@ from rearing_counts import rearing_by_session, rearing_by_group, rearing_by_vide
 from areas import areas_by_group, direction_by_group, mean_rears_per_area, rearing_direction_relationship
 from glmm import glmm
 from logistic import logistic
+from latent import latent_class
 
 def analyze_session(df, session_type):
     session_df = df[df['session'] == session_type].copy()
@@ -26,7 +27,8 @@ def analyze_session(df, session_type):
     # rearing_direction_relationship(session_df, session_type)
 
     # glmm(session_df, session_type)
-    logistic(session_df, session_type)
+    # logistic(session_df, session_type)
+    latent_class(session_df, session_type)
 
 
 
