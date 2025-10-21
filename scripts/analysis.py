@@ -11,6 +11,8 @@ from itertools import combinations
 from utils import load_data, get_area_and_direction_columns, fig_path, session_types, get_rearing
 from rearing_counts import rearing_by_session, rearing_by_group, rearing_by_video
 from areas import areas_by_group, direction_by_group, mean_rears_per_area, rearing_direction_relationship
+from glmm import glmm
+from logistic import logistic
 
 def analyze_session(df, session_type):
     session_df = df[df['session'] == session_type].copy()
@@ -21,7 +23,10 @@ def analyze_session(df, session_type):
     # areas_by_group(session_df, session_type)
     # direction_by_group(session_df, session_type)
     # mean_rears_per_area(session_df, session_type)
-    rearing_direction_relationship(session_df, session_type)
+    # rearing_direction_relationship(session_df, session_type)
+
+    # glmm(session_df, session_type)
+    logistic(session_df, session_type)
 
 
 
