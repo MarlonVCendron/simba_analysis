@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from scipy.stats import chi2_contingency, fisher_exact, chi2
+from scipy.stats import chi2_contingency, fisher_exact, chi2, pearsonr
 from statsmodels.stats.contingency_tables import StratifiedTable
 from scipy.stats import mannwhitneyu, ttest_ind, shapiro
 from itertools import combinations
@@ -107,19 +107,35 @@ def rearing_direction_relationship(df, session_type):
     area_columns, direction_columns = get_area_and_direction_columns(df, session_type)
     
     correlation_matrix = np.zeros((len(area_columns), len(direction_columns)))
-    
+    p_value_matrix = np.ones((len(area_columns), len(direction_columns)))
     
     rearing_df = get_rearing(df)
     for i, rearing_area in enumerate(area_columns):
         for j, direction_area in enumerate(direction_columns):
-            corr = rearing_df[rearing_area].corr(rearing_df[direction_area])
+            corr, p_val = pearsonr(rearing_df[rearing_area], rearing_df[direction_area])
             correlation_matrix[i, j] = corr if not np.isnan(corr) else 0
+            p_value_matrix[i, j] = p_val if not np.isnan(p_val) else 1
+
+    annotation_matrix = np.empty_like(correlation_matrix, dtype=object)
+    for i in range(len(area_columns)):
+        for j in range(len(direction_columns)):
+            corr_val = correlation_matrix[i, j]
+            p_val = p_value_matrix[i, j]
+            
+            if p_val < 0.001:
+                annotation_matrix[i, j] = f'{corr_val:.3f}***'
+            elif p_val < 0.01:
+                annotation_matrix[i, j] = f'{corr_val:.3f}**'
+            elif p_val < 0.05:
+                annotation_matrix[i, j] = f'{corr_val:.3f}*'
+            else:
+                annotation_matrix[i, j] = f'{corr_val:.3f}'
 
     plt.figure(figsize=(10, 8))
-    sns.heatmap(correlation_matrix, annot=True, fmt='.3f', cmap='RdBu_r', center=0,
+    sns.heatmap(correlation_matrix, annot=annotation_matrix, fmt='', cmap='RdBu_r', center=0,
                 xticklabels=direction_columns, yticklabels=area_columns,
                 cbar_kws={'label': 'Correlation'})
-    plt.title(f'Correlação área-direção - {session_type}')
+    plt.title(f'Correlação área-direção - {session_type}\n*** p<0.001, ** p<0.01, * p<0.05')
     plt.xlabel('Direcionamento')
     plt.ylabel('Áreas')
     

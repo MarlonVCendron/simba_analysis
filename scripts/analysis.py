@@ -26,9 +26,9 @@ def analyze_session(df, session_type):
     # mean_rears_per_area(session_df, session_type)
     # rearing_direction_relationship(session_df, session_type)
 
-    # glmm(session_df, session_type)
+    glmm(session_df, session_type)
     # logistic(session_df, session_type)
-    latent_class(session_df, session_type)
+    # latent_class(session_df, session_type)
 
 
 
