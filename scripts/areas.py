@@ -133,7 +133,7 @@ def rearing_direction_relationship(df, session_type):
 
     plt.figure(figsize=(10, 8))
     sns.heatmap(correlation_matrix, annot=annotation_matrix, fmt='', cmap='RdBu_r', center=0,
-                xticklabels=direction_columns, yticklabels=area_columns,
+                vmin=-1, vmax=1, xticklabels=direction_columns, yticklabels=area_columns,
                 cbar_kws={'label': 'Correlation'})
     plt.title(f'Correlação área-direção - {session_type}\n*** p<0.001, ** p<0.01, * p<0.05')
     plt.xlabel('Direcionamento')

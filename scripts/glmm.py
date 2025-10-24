@@ -6,6 +6,7 @@ from scipy import stats
 
 from statsmodels.formula.api import mixedlm
 from statsmodels.genmod.bayes_mixed_glm import PoissonBayesMixedGLM, BinomialBayesMixedGLM
+from statsmodels.genmod.families.family import Poisson, Binomial, Gamma
 
 
 from utils import fig_path, get_rearing, session_types, get_area_and_direction_columns, group_areas_and_directions
@@ -26,6 +27,7 @@ def glmm(df, session_type):
     
     model = PoissonBayesMixedGLM.from_formula(formula, vc_formulas=vcf, data=data)
     # model = BinomialBayesMixedGLM.from_formula(formula, vc_formulas=vcf, data=data)
+
     result = model.fit_vb()
 
     print(result.summary())
