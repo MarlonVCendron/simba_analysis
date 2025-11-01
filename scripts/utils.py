@@ -14,8 +14,8 @@ fig_path = os.path.join(base_path, 'figures')
 
 summary_data_path = os.path.join(base_path, 'data/summary_data.csv')
 
-session_types = ['t', 's1', 's2']
-groups = ['muscimol', 'salina']
+session_types = ['s1', 's2', 't']
+groups = ['salina', 'muscimol']
     
 
 def load_data():
@@ -25,11 +25,7 @@ def load_data():
 def get_rearing(df):
     return df[df['rearing'] == 1].copy()
 
-def get_area_and_direction_columns(df, session_type):
-    all_columns = df.columns.tolist()
-    
-    direction_columns = [col for col in all_columns if col.startswith('dir_')]
-    
+def get_area_and_direction_columns(session_type):
     if session_type == 's1':
         area_columns = ['OBJ_1', 'OBJ_2', 'OBJ_3', 'OBJ_4', 'NO_OBJ_1', 'NO_OBJ_2', 'NO_OBJ_3', 'NO_OBJ_4']
     elif session_type == 's2':
@@ -62,9 +58,10 @@ def group_areas_and_directions(_df, session_type):
         df['dir_NEVER'] = merge_bool_columns(df, ['dir_NEVER_1', 'dir_NEVER_2'])
         area_columns = ['NOVEL', 'FORMER', 'SAME', 'NEVER']
     elif session_type == 't':
-        df['NEVER'] = merge_bool_columns(df, ['NEVER_1', 'NEVER_2', 'NEVER_3'])
-        df['dir_NEVER'] = merge_bool_columns(df, ['dir_NEVER_1', 'dir_NEVER_2', 'dir_NEVER_3'])
-        area_columns = ['A1', 'A2', 'B1', 'B2', 'FORMER', 'NEVER']
+        # df['NEVER'] = merge_bool_columns(df, ['NEVER_1', 'NEVER_2', 'NEVER_3'])
+        # df['dir_NEVER'] = merge_bool_columns(df, ['dir_NEVER_1', 'dir_NEVER_2', 'dir_NEVER_3'])
+        # area_columns = ['A1', 'A2', 'B1', 'B2', 'FORMER', 'NEVER']
+        area_columns = ['A1', 'A2', 'B1', 'B2', 'FORMER', 'NEVER_1', 'NEVER_2', 'NEVER_3']
     
     direction_columns = ['dir_' + col for col in area_columns]
     return df, area_columns, direction_columns

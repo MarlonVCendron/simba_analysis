@@ -54,17 +54,17 @@ def _plot_group_comparison(df, columns, session_type, column_type, xlabel, title
 
 def areas_by_group(df, session_type):
     df = df.copy()
-    area_columns, direction_columns = get_area_and_direction_columns(df, session_type)
+    area_columns, direction_columns = get_area_and_direction_columns(session_type)
     _plot_group_comparison(df, area_columns, session_type, 'area', 'Áreas', 'Rearing por área e grupo', 'areas_by_group')
 
 def direction_by_group(df, session_type):
     df = df.copy()
-    area_columns, direction_columns = get_area_and_direction_columns(df, session_type)
+    area_columns, direction_columns = get_area_and_direction_columns(session_type)
     _plot_group_comparison(df, direction_columns, session_type, 'direction', 'Direções', 'Rearing por direção e grupo', 'direction_by_group')
 
 def mean_rears_per_area(df, session_type):
     df = df.copy()
-    area_columns, _ = get_area_and_direction_columns(df, session_type)
+    area_columns, _ = get_area_and_direction_columns(session_type)
     
     mean_rears = []
     areas = []
@@ -104,7 +104,7 @@ def mean_rears_per_area(df, session_type):
 
 def rearing_direction_relationship(df, session_type):
     df = df.copy()
-    area_columns, direction_columns = get_area_and_direction_columns(df, session_type)
+    area_columns, direction_columns = get_area_and_direction_columns(session_type)
     
     correlation_matrix = np.zeros((len(area_columns), len(direction_columns)))
     p_value_matrix = np.ones((len(area_columns), len(direction_columns)))
