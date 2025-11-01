@@ -91,14 +91,15 @@ def plot_area_during_rearing_counts(data):
             ax.legend(title='Group')
     
     plt.tight_layout(rect=[0, 0, 1, 0.96])
-    fig.suptitle('Most Prominent Area During Rearing Counts', fontsize=16, fontweight='bold', y=0.98)
+    fig.suptitle('Area During Rearing Counts', fontsize=16, fontweight='bold', y=0.98)
     plt.savefig(os.path.join(base_fig_path, 'area_during_rearing_counts.png'))
     plt.close()
 
-def plot_area_during_rearing_mean_duration(data):
+def plot_area_during_rearing_mean_duration(data, normalized=False):
+    normalized_suffix = "_normalized" if normalized else ""
     plot_data = []
     for _, row in data.iterrows():
-        area_mean_durations = row['area_during_rearing_mean_duration']
+        area_mean_durations = row[f'area_during_rearing_mean_duration{normalized_suffix}']
         for area, mean_duration in area_mean_durations.items():
             plot_data.append({'session': row['session'], 'group': row['group'], 'area': area, 'mean_duration': mean_duration})
     
@@ -123,14 +124,15 @@ def plot_area_during_rearing_mean_duration(data):
             ax.legend(title='Group')
     
     plt.tight_layout(rect=[0, 0, 1, 0.96])
-    fig.suptitle('Most Prominent Area During Rearing Mean Duration', fontsize=16, fontweight='bold', y=0.98)
-    plt.savefig(os.path.join(base_fig_path, 'area_during_rearing_mean_duration.png'))
+    fig.suptitle(f'Area During Rearing Duration {"Normalized" if normalized else ""}', fontsize=16, fontweight='bold', y=0.98)
+    plt.savefig(os.path.join(base_fig_path, f'area_during_rearing_mean_duration{normalized_suffix}.png'))
     plt.close()
 
-def plot_area_after_rearing_durations(data):
+def plot_area_after_rearing_durations(data, normalized=False):
+    normalized_suffix = "_normalized" if normalized else ""
     plot_data = []
     for _, row in data.iterrows():
-        area_durations = row['area_after_rearing_durations']
+        area_durations = row[f'area_after_rearing_durations{normalized_suffix}']
         for area in area_durations.columns:
             durations = area_durations[area].values
             for duration in durations:
@@ -156,7 +158,7 @@ def plot_area_after_rearing_durations(data):
             ax.legend(title='Group')
 
     plt.tight_layout(rect=[0, 0, 1, 0.96])
-    fig.suptitle('Area After Rearing Duration', fontsize=16, fontweight='bold', y=0.98)
-    plt.savefig(os.path.join(base_fig_path, 'area_after_rearing_durations.png'))
+    fig.suptitle(f'Area After Rearing Duration {"Normalized" if normalized else ""}', fontsize=16, fontweight='bold', y=0.98)
+    plt.savefig(os.path.join(base_fig_path, f'area_after_rearing_durations{normalized_suffix}.png'))
     plt.close()
 
