@@ -3,11 +3,13 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import networkx as nx
 
 from scripts.utils import fig_path, session_types, groups
 
 colors = {
     'saline': '#145faa',
+    'salina': '#145faa',
     'muscimol': '#828287'
 }
 
@@ -206,4 +208,78 @@ def plot_area_correlation_matrix(data):
     plt.tight_layout(rect=[0, 0, 1, 0.96])
     fig.suptitle('Area Correlation Matrix', fontsize=16, fontweight='bold', y=0.98)
     plt.savefig(os.path.join(base_fig_path, 'area_correlation_matrix.png'))
+    plt.close()
+
+def plot_area_correlation_graph(data):
+    fig, axes = plt.subplots(len(session_types), len(groups), figsize=(8*len(groups), 6*len(session_types)))
+    
+    session_matrices = {}
+    for i, session in enumerate(session_types):
+        for j, group in enumerate(groups):
+            ax = axes[i, j]
+            session_group_data = data[(data['session'] == session) & (data['group'] == group)]
+            
+            aggregated_matrix = None
+            for _, row in session_group_data.iterrows():
+                matrix = row['area_correlation_matrix']
+                if aggregated_matrix is None:
+                    aggregated_matrix = matrix.copy()
+                else:
+                    aggregated_matrix = aggregated_matrix.add(matrix, fill_value=0)
+            
+            aggregated_matrix = aggregated_matrix.div(aggregated_matrix.sum(axis=1), axis=0).fillna(0)
+            if session not in session_matrices:
+                session_matrices[session] = {}
+            session_matrices[session][group] = aggregated_matrix
+            
+            G = nx.DiGraph()
+            for from_area in aggregated_matrix.index:
+                for to_area in aggregated_matrix.columns:
+                    weight = aggregated_matrix.loc[from_area, to_area]
+                    if weight > 0:
+                        G.add_edge(from_area, to_area, weight=weight)
+            
+            if len(G.nodes()) > 0:
+                pos = nx.circular_layout(G)
+                
+                edges = G.edges()
+                weights = [G[u][v]['weight'] for u, v in edges]
+                edge_widths = [w * 15 + 1.0 for w in weights]
+                
+                node_colors = colors[group]
+                nx.draw_networkx_nodes(G, pos, ax=ax, node_color=node_colors, 
+                                      node_size=2000, alpha=0.85, linewidths=2, 
+                                      edgecolors='white')
+                
+                nx.draw_networkx_labels(G, pos, ax=ax, font_size=10, font_weight='bold',
+                                      font_color='white')
+                
+                if weights:
+                    cmap = plt.cm.RdBu_r
+                    norm = plt.Normalize(vmin=min(weights), vmax=max(weights))
+                    edge_colors = [cmap(norm(w)) for w in weights]
+                else:
+                    edge_colors = 'gray'
+                
+                nx.draw_networkx_edges(G, pos, ax=ax, width=edge_widths, 
+                                      edge_color=edge_colors, alpha=0.7, arrows=True, 
+                                      arrowsize=25, arrowstyle='->', connectionstyle='arc3,rad=0.1')
+                
+                ax.set_facecolor('#f5f5f5')
+            
+            ax.set_title(f'Session {session.upper()} - {group.capitalize()}', 
+                        fontsize=12, fontweight='bold', pad=15)
+            ax.axis('off')
+    
+    for i, session in enumerate(session_types):
+        matrix1 = session_matrices[session][groups[0]].values.flatten()
+        matrix2 = session_matrices[session][groups[1]].values.flatten()
+        corr = np.corrcoef(matrix1, matrix2)[0, 1]
+        ax = axes[i, 0]
+        ax.text(0.02, 0.98, f'$\\rho$={corr:.3f}', transform=ax.transAxes, 
+               fontsize=10, verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+    
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    fig.suptitle('Area Correlation Graph', fontsize=16, fontweight='bold', y=0.98)
+    plt.savefig(os.path.join(base_fig_path, 'area_correlation_graph.png'))
     plt.close()

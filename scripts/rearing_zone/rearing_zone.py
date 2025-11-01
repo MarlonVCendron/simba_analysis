@@ -21,12 +21,14 @@ from scripts.rearing_zone.plots import (
     plot_area_during_rearing_mean_duration,
     plot_area_after_rearing_durations,
     plot_area_correlation_matrix,
+    plot_area_correlation_graph,
 )
 
 fps = 30
 after_rearing_window_start = 2  # seconds
 after_rearing_window_time = 10  # seconds
 repeat_rearing_time_allowance = 1  # seconds
+correlation_method = 'max' # 'max' or 'duration_sum'
 
 
 def calculate_durations(video_df):
@@ -110,15 +112,20 @@ def calculate_durations(video_df):
         area_after_rearing_durations_normalized = pd.DataFrame(dtype=float)
 
     if len(area_during_rearing) != len(area_after_rearing_durations):
-        print(f'EITA! tamanhos diferentes: {len(durations)} != {len(valid_rearing_ends)}')
-        exit()
+        raise ValueError(f'EITA! tamanhos diferentes: {len(durations)} != {len(valid_rearing_ends)}')
 
     area_correlation_matrix = pd.DataFrame(0.0, index=area_columns, columns=area_columns)
     if len(area_after_rearing_durations) > 0:
         for i, during_area in enumerate(area_during_rearing):
             after_durations = area_after_rearing_durations.iloc[i]
-            for after_area in area_columns:
-                area_correlation_matrix.loc[during_area, after_area] += after_durations[after_area]
+            if correlation_method == 'max':
+                max_after_area = after_durations.idxmax()
+                area_correlation_matrix.loc[during_area, max_after_area] += 1
+            elif correlation_method == 'duration_sum':
+              for after_area in area_columns:
+                  area_correlation_matrix.loc[during_area, after_area] += after_durations[after_area]
+            else:
+                raise ValueError(f'Método inválido: {correlation_method}')
     
     area_correlation_matrix = area_correlation_matrix.div(area_correlation_matrix.sum(axis=1), axis=0).fillna(0)
     
@@ -191,6 +198,7 @@ def main():
     # plot_area_after_rearing_durations(result, normalized=True)
 
     plot_area_correlation_matrix(result)
+    plot_area_correlation_graph(result)
 
 
 
