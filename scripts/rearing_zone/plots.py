@@ -162,3 +162,48 @@ def plot_area_after_rearing_durations(data, normalized=False):
     plt.savefig(os.path.join(base_fig_path, f'area_after_rearing_durations{normalized_suffix}.png'))
     plt.close()
 
+def plot_area_correlation_matrix(data):
+    fig, axes = plt.subplots(len(session_types), len(groups), figsize=(8*len(groups), 6*len(session_types)))
+    
+    session_matrices = {}
+    for i, session in enumerate(session_types):
+        for j, group in enumerate(groups):
+            ax = axes[i, j]
+            session_group_data = data[(data['session'] == session) & (data['group'] == group)]
+            
+            aggregated_matrix = None
+            for _, row in session_group_data.iterrows():
+                matrix = row['area_correlation_matrix']
+                if aggregated_matrix is None:
+                    aggregated_matrix = matrix.copy()
+                else:
+                    aggregated_matrix = aggregated_matrix.add(matrix, fill_value=0)
+            
+            aggregated_matrix = aggregated_matrix.div(aggregated_matrix.sum(axis=1), axis=0).fillna(0)
+            if session not in session_matrices:
+                session_matrices[session] = {}
+            session_matrices[session][group] = aggregated_matrix
+            
+            annot_data = pd.DataFrame(index=aggregated_matrix.index, columns=aggregated_matrix.columns,
+                                     data=[[f'{val:.3f}' for val in row] for row in aggregated_matrix.values])
+            sns.heatmap(aggregated_matrix, annot=annot_data, fmt='', cmap='RdBu_r', ax=ax, 
+                       cbar_kws={'label': 'Proportion'}, annot_kws={'fontsize': 8}, 
+                       vmin=0, vmax=1, xticklabels=True, yticklabels=True)
+            ax.set_title(f'Session {session.upper()} - {group.capitalize()}')
+            ax.set_xlabel('Area After Rearing')
+            ax.set_ylabel('Area During Rearing')
+            ax.tick_params(axis='x', rotation=45)
+            ax.tick_params(axis='y', rotation=0)
+    
+    for i, session in enumerate(session_types):
+        matrix1 = session_matrices[session][groups[0]].values.flatten()
+        matrix2 = session_matrices[session][groups[1]].values.flatten()
+        corr = np.corrcoef(matrix1, matrix2)[0, 1]
+        ax = axes[i, 0]
+        ax.text(0.02, 0.98, f'$\\rho$={corr:.3f}', transform=ax.transAxes, 
+               fontsize=10, verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+    
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    fig.suptitle('Area Correlation Matrix', fontsize=16, fontweight='bold', y=0.98)
+    plt.savefig(os.path.join(base_fig_path, 'area_correlation_matrix.png'))
+    plt.close()

@@ -20,6 +20,7 @@ from scripts.rearing_zone.plots import (
     plot_area_during_rearing_counts,
     plot_area_during_rearing_mean_duration,
     plot_area_after_rearing_durations,
+    plot_area_correlation_matrix,
 )
 
 fps = 30
@@ -87,10 +88,10 @@ def calculate_durations(video_df):
         window_start = end + after_rearing_window_start_frames
         window_end = window_start + after_rearing_window_frames
         next_starts = starts[starts >= window_start]
-        if window_end > len(video_df):
-            continue
-        if len(next_starts) == 0 or next_starts[0] >= window_start + (repeat_rearing_time_allowance * fps):
-            valid_rearing_ends.append(end)
+        # if window_end > len(video_df):
+        #     continue
+        # if len(next_starts) == 0 or next_starts[0] >= window_start + (repeat_rearing_time_allowance * fps):
+        valid_rearing_ends.append(end)
     valid_rearing_ends = np.array(valid_rearing_ends)
 
     after_rearing_area_sums = []
@@ -108,6 +109,19 @@ def calculate_durations(video_df):
         area_after_rearing_durations = pd.DataFrame(dtype=float)
         area_after_rearing_durations_normalized = pd.DataFrame(dtype=float)
 
+    if len(area_during_rearing) != len(area_after_rearing_durations):
+        print(f'EITA! tamanhos diferentes: {len(durations)} != {len(valid_rearing_ends)}')
+        exit()
+
+    area_correlation_matrix = pd.DataFrame(0.0, index=area_columns, columns=area_columns)
+    if len(area_after_rearing_durations) > 0:
+        for i, during_area in enumerate(area_during_rearing):
+            after_durations = area_after_rearing_durations.iloc[i]
+            for after_area in area_columns:
+                area_correlation_matrix.loc[during_area, after_area] += after_durations[after_area]
+    
+    area_correlation_matrix = area_correlation_matrix.div(area_correlation_matrix.sum(axis=1), axis=0).fillna(0)
+    
     return (
         np.mean(durations),
         np.sum(durations),
@@ -118,6 +132,7 @@ def calculate_durations(video_df):
         area_after_rearing_durations,
         area_after_rearing_durations_normalized,
         rearing,
+        area_correlation_matrix,
     )
 
 
@@ -137,6 +152,7 @@ def process_video(group_df):
         area_after_rearing_durations,
         area_after_rearing_durations_normalized,
         rearing_arr,
+        area_correlation_matrix,
     ) = result
     return pd.Series(
         {
@@ -149,6 +165,7 @@ def process_video(group_df):
             "area_after_rearing_durations": area_after_rearing_durations,
             "area_after_rearing_durations_normalized": area_after_rearing_durations_normalized,
             "rearing_array": rearing_arr,
+            "area_correlation_matrix": area_correlation_matrix,
         }
     )
 
@@ -164,14 +181,17 @@ def main():
     #     rearing = result.loc[idx, "rearing_array"]
     #     plot_rearing_episode(video_name, rearing)
 
-    plot_mean_duration(result)
-    plot_sum_duration(result)
-    plot_total_episodes(result)
-    plot_area_during_rearing_counts(result)
-    plot_area_during_rearing_mean_duration(result)
-    plot_area_after_rearing_durations(result)
-    plot_area_during_rearing_mean_duration(result, normalized=True)
-    plot_area_after_rearing_durations(result, normalized=True)
+    # plot_mean_duration(result)
+    # plot_sum_duration(result)
+    # plot_total_episodes(result)
+    # plot_area_during_rearing_counts(result)
+    # plot_area_during_rearing_mean_duration(result)
+    # plot_area_after_rearing_durations(result)
+    # plot_area_during_rearing_mean_duration(result, normalized=True)
+    # plot_area_after_rearing_durations(result, normalized=True)
+
+    plot_area_correlation_matrix(result)
+
 
 
 if __name__ == "__main__":
