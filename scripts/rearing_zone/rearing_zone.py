@@ -22,7 +22,9 @@ from scripts.rearing_zone.plots import (
     plot_area_after_rearing_durations,
     plot_area_correlation_matrix,
     plot_area_correlation_graph,
+    plot_direction_during_rearing,
 )
+from scripts.rearing_zone.save_to_csv import save_to_csv
 
 fps = 30
 after_rearing_window_start = 2  # seconds
@@ -55,6 +57,7 @@ def calculate_durations(video_df):
         return None
 
     total_area_durations = video_df[area_columns].sum() / fps
+    total_direction_durations = video_df[direction_columns].sum() / fps
 
     total_episodes = len(starts)
     durations = (ends - starts) / fps
@@ -71,6 +74,14 @@ def calculate_durations(video_df):
         # area_during_rearing_ratio.append(most_prominent_area_ratio)
     area_during_rearing = np.array(area_during_rearing)
     area_during_rearing_counts = pd.Series(area_during_rearing).value_counts()
+
+    direction_during_rearing_sums = []
+    for start, end in zip(starts, ends):
+        episode_directions = video_df.loc[start : end - 1, direction_columns]
+        direction_sums = episode_directions.sum()
+        direction_during_rearing_sums.append(direction_sums)
+    direction_during_rearing = pd.DataFrame(direction_during_rearing_sums) / fps
+    direction_during_rearing = direction_during_rearing.div(durations, axis=0)
 
     df_areas_during_rearing_durations = pd.DataFrame({"area": area_during_rearing, "duration": durations})
     area_during_rearing_mean_duration = df_areas_during_rearing_durations.groupby("area")["duration"].mean()
@@ -140,6 +151,9 @@ def calculate_durations(video_df):
         area_after_rearing_durations_normalized,
         rearing,
         area_correlation_matrix,
+        direction_during_rearing,
+        durations,
+        area_during_rearing,
     )
 
 
@@ -149,32 +163,25 @@ def process_video(group_df):
     if result is None:
         return None
 
-    (
-        mean_dur,
-        sum_dur,
-        total_episodes,
-        area_during_rearing_counts,
-        area_during_rearing_mean_duration,
-        area_during_rearing_mean_duration_normalized,
-        area_after_rearing_durations,
-        area_after_rearing_durations_normalized,
-        rearing_arr,
-        area_correlation_matrix,
-    ) = result
-    return pd.Series(
+    result = pd.Series(
         {
-            "mean_duration": mean_dur,
-            "sum_duration": sum_dur,
-            "total_episodes": total_episodes,
-            "area_during_rearing_counts": area_during_rearing_counts,
-            "area_during_rearing_mean_duration": area_during_rearing_mean_duration,
-            "area_during_rearing_mean_duration_normalized": area_during_rearing_mean_duration_normalized,
-            "area_after_rearing_durations": area_after_rearing_durations,
-            "area_after_rearing_durations_normalized": area_after_rearing_durations_normalized,
-            "rearing_array": rearing_arr,
-            "area_correlation_matrix": area_correlation_matrix,
+            "mean_duration": result[0],
+            "sum_duration": result[1],
+            "total_episodes": result[2],
+            "area_during_rearing_counts": result[3],
+            "area_during_rearing_mean_duration": result[4],
+            "area_during_rearing_mean_duration_normalized": result[5],
+            "area_after_rearing_durations": result[6],
+            "area_after_rearing_durations_normalized": result[7],
+            "rearing_array": result[8],
+            "area_correlation_matrix": result[9],
+            "direction_during_rearing": result[10],
+            "episode_durations": result[11],
+            "episode_areas": result[12],
         }
     )
+
+    return result
 
 
 def main():
@@ -183,6 +190,9 @@ def main():
     result = df.groupby(["session", "group", "video"], group_keys=False).apply(process_video, include_groups=True).reset_index()
 
     result = result.dropna()
+    
+    save_to_csv(result)
+    
     # for idx in result.index:
     #     video_name = result.loc[idx, "video"]
     #     rearing = result.loc[idx, "rearing_array"]
@@ -197,8 +207,10 @@ def main():
     # plot_area_during_rearing_mean_duration(result, normalized=True)
     # plot_area_after_rearing_durations(result, normalized=True)
 
-    plot_area_correlation_matrix(result)
-    plot_area_correlation_graph(result)
+    plot_direction_during_rearing(result)
+
+    # plot_area_correlation_matrix(result)
+    # plot_area_correlation_graph(result)
 
 
 

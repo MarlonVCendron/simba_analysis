@@ -164,6 +164,40 @@ def plot_area_after_rearing_durations(data, normalized=False):
     plt.savefig(os.path.join(base_fig_path, f'area_after_rearing_durations{normalized_suffix}.png'))
     plt.close()
 
+    
+def plot_direction_during_rearing(data):
+    plot_data = []
+    for _, row in data.iterrows():
+        direction_durations = row['direction_during_rearing']
+        for direction in direction_durations.columns:
+            durations = direction_durations[direction].values
+            for duration in durations:
+                plot_data.append({'session': row['session'], 'group': row['group'], 'direction': direction, 'duration': duration})
+    
+    df_plot = pd.DataFrame(plot_data)
+    
+    fig, axes = plt.subplots(1, len(session_types), figsize=(6*len(session_types), 6), sharey=True)
+    if len(session_types) == 1:
+        axes = [axes]
+    
+    for ax, session in zip(axes, session_types):
+        session_data = df_plot[df_plot['session'] == session]
+        if len(session_data) > 0:
+            directions = sorted(session_data['direction'].unique())
+            sns.barplot(data=session_data, x='direction', y='duration', hue='group',
+                       order=directions, hue_order=groups,
+                       palette=[colors['saline'], colors['muscimol']], ax=ax)
+            ax.set_title(f'Session {session.upper()}')
+            ax.set_xlabel('Direction')
+            ax.set_ylabel('Duration (s)')
+            ax.tick_params(axis='x', rotation=45)
+            ax.legend(title='Group')
+
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    fig.suptitle(f'Direction During Rearing Duration', fontsize=16, fontweight='bold', y=0.98)
+    plt.savefig(os.path.join(base_fig_path, f'direction_during_rearing.png'))
+    plt.close()
+
 def plot_area_correlation_matrix(data):
     fig, axes = plt.subplots(len(session_types), len(groups), figsize=(8*len(groups), 6*len(session_types)))
     
