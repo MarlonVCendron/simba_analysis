@@ -1,9 +1,4 @@
-# Zone-Level Rearing Analysis: Group × Session × Zone
-# Spatial rearing patterns across different experimental phases
-
-# Setup
 suppressPackageStartupMessages({
-  library(geepack)
   library(ggplot2)
   library(tidyr)
   library(dplyr)
@@ -13,12 +8,10 @@ suppressPackageStartupMessages({
   library(DHARMa)
 })
 
-# Data preparation
 s1_data <- read.csv("data/spss/S1_rearing.csv", header=TRUE, na.strings = "NA", sep=";", dec=",")
 s2_data <- read.csv("data/spss/S2_rearing.csv", header=TRUE, na.strings = "NA", sep=";", dec=",")
 t_data <- read.csv("data/spss/T_rearing.csv", header=TRUE, na.strings = "NA", sep=";", dec=",")
 
-# S1: OBJ vs NO_OBJ zones
 s1_long <- s1_data %>%
   select(Video, GRUPO, OBJ_1_DUR, OBJ_2_DUR, OBJ_3_DUR, OBJ_4_DUR, 
          NO_OBJ_1_DUR, NO_OBJ_2_DUR, NO_OBJ_3_DUR, NO_OBJ_4_DUR) %>%
@@ -35,7 +28,6 @@ s1_long <- s1_data %>%
   ) %>%
   mutate(Session = "S1", Zone = as.factor(Zone))
 
-# S2: Former, Novel, Same, Never zones
 s2_long <- s2_data %>%
   select(ANIMAL, GRUPO, FORMER_1_DUR, FORMER_2_DUR, NOVEL_1_DUR, NOVEL_2_DUR, 
          SAME_1_DUR, SAME_2_DUR, NEVER_1_DUR, NEVER_2_DUR) %>%
@@ -64,7 +56,6 @@ s2_long <- s2_data %>%
   ) %>%
   mutate(Session = "S2", Zone = as.factor(Zone))
 
-# T: A1, A2, B1, B2, Former, Never zones
 t_long <- t_data %>%
   select(ANIMAL, GRUPO, A1_DUR, A2_DUR, B1_DUR, B2_DUR, FORMER_DUR, NEVER_1_DUR, NEVER_2_DUR, NEVER_3_DUR) %>%
   pivot_longer(cols = c(A1_DUR, A2_DUR), names_to = "Zone", values_to = "Duration") %>%
@@ -89,7 +80,6 @@ t_long <- t_data %>%
   ) %>%
   mutate(Session = "T", Zone = as.factor(Zone))
 
-# Combine all sessions
 zone_data <- bind_rows(s1_long, s2_long, t_long) %>%
   mutate(
     Group = as.factor(GRUPO),
@@ -102,7 +92,6 @@ zone_data <- bind_rows(s1_long, s2_long, t_long) %>%
 levels(zone_data$Group) <- c("Saline", "Muscimol")
 levels(zone_data$Session) <- c("S1", "S2", "T")
 
-# Debug: Check data structure
 cat("Zone data dimensions:", dim(zone_data), "\n")
 cat("Zone data summary:\n")
 print(str(zone_data))
@@ -137,12 +126,7 @@ fit_one <- function(df) {
           control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5))),
     error=function(e) NULL
   )
-  m_gee <- tryCatch(
-    geeglm(Duration ~ Group + Zone + Group:Zone, data=df, id=Rat_id,
-           family=Gamma("log"), corstr="ar1"),
-    error=function(e) NULL
-  )
-  list(glmm=m_glmm, gee=m_gee)
+  list(glmm=m_glmm)
 }
 
 for (sess in sessions) {
@@ -153,36 +137,19 @@ for (sess in sessions) {
 
   models <- fit_one(d)
 
-  # Compare (AIC for GLMM, QIC for GEE)
-  aic <- if (!is.null(models$glmm)) AIC(models$glmm) else NA
-  qic <- if (!is.null(models$gee)) {
-    tryCatch(QIC(models$gee)[1], error = function(e) NA)
-  } else NA
-  print(data.frame(Session=sess, GLMM_Gamma_AIC=aic, GEE_Gamma_QIC=qic))
+  aic <- AIC(models$glmm)
+  print(data.frame(Session=sess, GLMM_Gamma_AIC=aic))
 
-  # Choose best by whichever metric is available/prefer GLMM if both present
-  best <- if (!is.na(aic)) "glmm" else if (!is.na(qic)) "gee" else NA
+  best <- if (!is.na(aic)) "glmm" else NA
 
-  if (identical(best,"glmm")) {
-    cat("Best:", best, "\n")
-    print(summary(models$glmm))
-    print(anova(models$glmm))
-    # Effects
-    cat("EMMEANS: Group differences within Zone\n")
-    print(emmeans(models$glmm, pairwise ~ Group | Zone, type="response"))
-    cat("EMMEANS: Zone differences within Group\n")
-    print(emmeans(models$glmm, pairwise ~ Zone | Group, type="response"))
-  } else if (identical(best,"gee")) {
-    cat("Best:", best, "\n")
-    print(summary(models$gee))
-    # For GEE, use emmeans with caution (population-average)
-    cat("EMMEANS (GEE): Group within Zone\n")
-    print(emmeans(models$gee, pairwise ~ Group | Zone, type="response"))
-    cat("EMMEANS (GEE): Zone within Group\n")
-    print(emmeans(models$gee, pairwise ~ Zone | Group, type="response"))
-  } else {
-    cat("No estimable model for session", sess, "\n")
-  }
+  cat("Best:", best, "\n")
+  print(summary(models$glmm))
+  print(anova(models$glmm))
+  # Effects
+  cat("EMMEANS: Group differences within Zone\n")
+  print(emmeans(models$glmm, pairwise ~ Group | Zone, type="response"))
+  cat("EMMEANS: Zone differences within Group\n")
+  print(emmeans(models$glmm, pairwise ~ Zone | Group, type="response"))
 }
 
 # Save plots
