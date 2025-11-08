@@ -6,6 +6,12 @@ import seaborn as sns
 import networkx as nx
 
 from scripts.utils import fig_path, session_types, groups
+from scripts.rearing_zone.stats import (
+    analyze_area_during_rearing_mean_duration, 
+    print_statistical_summary,
+    analyze_area_correlation_matrices,
+    print_correlation_matrix_summary
+)
 
 colors = {
     'saline': '#145faa',
@@ -73,7 +79,7 @@ def plot_area_during_rearing_counts(data):
             plot_data.append({'session': row['session'], 'group': row['group'], 'area': area, 'count': count})
     
     df_plot = pd.DataFrame(plot_data)
-    # df_plot = df_plot.groupby(['session', 'group', 'area'], as_index=False)['count'].sum()
+    df_plot = df_plot.groupby(['session', 'group', 'area'], as_index=False)['count'].sum()
     
     fig, axes = plt.subplots(1, len(session_types), figsize=(6*len(session_types), 6), sharey=True)
     if len(session_types) == 1:
@@ -107,6 +113,10 @@ def plot_area_during_rearing_mean_duration(data, normalized=False):
     
     df_plot = pd.DataFrame(plot_data)
     # df_plot = df_plot.groupby(['session', 'group', 'area'], as_index=False)['mean_duration'].mean()
+    
+    # Perform statistical analysis
+    stats_results = analyze_area_during_rearing_mean_duration(df_plot, session_types, groups)
+    print_statistical_summary(stats_results, session_types, groups)
     
     fig, axes = plt.subplots(1, len(session_types), figsize=(6*len(session_types), 6), sharey=True)
     if len(session_types) == 1:
@@ -199,6 +209,10 @@ def plot_direction_during_rearing(data):
     plt.close()
 
 def plot_area_correlation_matrix(data):
+    # Perform statistical analysis
+    stats_results = analyze_area_correlation_matrices(data, session_types, groups)
+    print_correlation_matrix_summary(stats_results, session_types, groups)
+    
     fig, axes = plt.subplots(len(session_types), len(groups), figsize=(8*len(groups), 6*len(session_types)))
     
     session_matrices = {}

@@ -207,9 +207,9 @@ def main():
     # plot_area_during_rearing_mean_duration(result, normalized=True)
     # plot_area_after_rearing_durations(result, normalized=True)
 
-    plot_direction_during_rearing(result)
+    # plot_direction_during_rearing(result)
 
-    # plot_area_correlation_matrix(result)
+    plot_area_correlation_matrix(result)
     # plot_area_correlation_graph(result)
 
 
